@@ -31,7 +31,7 @@ class KnotCollector(object):
             collect_stats : bool,
             collect_zone_stats : bool,
             collect_zone_status : bool,
-            collect_zone_read : bool,):
+            collect_zone_timers : bool,):
         load_lib(lib)
         self._sock = sock
         self._ttl = ttl
@@ -39,7 +39,7 @@ class KnotCollector(object):
         self.collect_stats = collect_stats
         self.collect_zone_stats = collect_zone_stats
         self.collect_zone_status = collect_zone_status
-        self.collect_zone_read = collect_zone_read
+        self.collect_zone_timers = collect_zone_timers
 
     def convert_state_time(time):
 
@@ -121,7 +121,7 @@ class KnotCollector(object):
 
             for zone, info in zone_states.items():
                 metrics = ['expiration', 'refresh']
-                
+
                 for metric in metrics:
                     seconds = KnotCollector.convert_state_time(info[metric])
                     if seconds == None:
@@ -132,7 +132,7 @@ class KnotCollector(object):
 
                     yield m
 
-        if self.collect_zone_read:
+        if self.collect_zone_timers:
             # zone configuration metrics
             ctl.send_block(cmd="zone-read", rtype="SOA")
             zones = ctl.receive_block()
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         args.no_global_stats,
         args.no_zone_stats,
         args.no_zone_status,
-        args.no_zone_read,
+        args.no_zone_timers,
     ))
 
     httpd = http.server.HTTPServer(
