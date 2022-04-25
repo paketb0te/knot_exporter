@@ -9,7 +9,7 @@ import http.server
 import psutil
 import re
 
-from libknot.control import *
+import libknot.control
 
 from prometheus_client.core import REGISTRY
 from prometheus_client.core import GaugeMetricFamily
@@ -32,7 +32,7 @@ class KnotCollector(object):
             collect_zone_stats : bool,
             collect_zone_status : bool,
             collect_zone_timers : bool,):
-        load_lib(lib)
+        libknot.control.load_lib(lib)
         self._sock = sock
         self._ttl = ttl
         self.collect_meminfo = collect_meminfo
@@ -62,7 +62,7 @@ class KnotCollector(object):
         return seconds
 
     def collect(self):
-        ctl = KnotCtl()
+        ctl = libknot.control.KnotCtl()
         ctl.connect(self._sock)
         ctl.set_timeout(self._ttl)
 
