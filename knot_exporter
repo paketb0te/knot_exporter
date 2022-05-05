@@ -231,7 +231,13 @@ if __name__ == '__main__':
         args.no_zone_timers,
     ))
 
-    httpd = http.server.HTTPServer(
+    class Server(http.server.HTTPServer):
+        def __init__(self, server_address, RequestHandlerClass):
+            ip = ipaddress.ip_address(server_address[0])
+            self.address_family = socket.AF_INET6 if ip.version == 6 else socket.AF_INET
+            super().__init__(server_address, RequestHandlerClass)
+
+    httpd = Server(
         (args.web_listen_addr, args.web_listen_port),
         MetricsHandler,
     )
