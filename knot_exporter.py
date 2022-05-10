@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
-from ctypes import cdll, c_void_p, c_int, c_char_p, c_uint, byref
-from enum import IntEnum
-from subprocess import check_output
-
 import argparse
 import http.server
+import ipaddress
 import psutil
 import re
+import socket
+import subprocess
 
+import libknot
 import libknot.control
 
 from prometheus_client.core import REGISTRY
@@ -17,7 +17,7 @@ from prometheus_client.exposition import MetricsHandler
 
 def memory_usage():
     out = dict()
-    pids = check_output(['pidof', 'knotd']).split(b' ')
+    pids = subprocess.check_output(['pidof', 'knotd']).split(b' ')
     for pid in pids:
         if not pid:
             continue
@@ -32,7 +32,7 @@ class KnotCollector(object):
             collect_zone_stats : bool,
             collect_zone_status : bool,
             collect_zone_timers : bool,):
-        libknot.control.load_lib(lib)
+        libknot.Knot(lib)
         self._sock = sock
         self._ttl = ttl
         self.collect_meminfo = collect_meminfo
@@ -42,7 +42,6 @@ class KnotCollector(object):
         self.collect_zone_timers = collect_zone_timers
 
     def convert_state_time(time):
-
         if time == "pending" or time == "running":
             return 0
         elif time == "not scheduled":
@@ -240,7 +239,13 @@ if __name__ == '__main__':
         args.no_zone_timers,
     ))
 
-    httpd = http.server.HTTPServer(
+    class Server(http.server.HTTPServer):
+        def __init__(self, server_address, RequestHandlerClass):
+            ip = ipaddress.ip_address(server_address[0])
+            self.address_family = socket.AF_INET6 if ip.version == 6 else socket.AF_INET
+            super().__init__(server_address, RequestHandlerClass)
+
+    httpd = Server(
         (args.web_listen_addr, args.web_listen_port),
         MetricsHandler,
     )
