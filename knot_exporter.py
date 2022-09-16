@@ -119,6 +119,14 @@ class KnotCollector(object):
             zone_states = ctl.receive_block()
 
             for zone, info in zone_states.items():
+
+                serial = info.get('serial', False)
+                if serial:
+                    m = GaugeMetricFamily('knot_zone_serial', '', labels=['zone'])
+                    m.add_metric([zone], int(serial))
+
+                    yield m
+
                 metrics = ['expiration', 'refresh']
 
                 for metric in metrics:
