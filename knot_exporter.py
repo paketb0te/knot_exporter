@@ -42,9 +42,9 @@ class KnotCollector(object):
         self.collect_zone_timers = collect_zone_timers
 
     def convert_state_time(time):
-        if time == "pending" or time == "running":
+        if time == "pending" or time == "running" or time == "frozen":
             return 0
-        elif time == "not scheduled":
+        elif time == "not scheduled" or time == "-":
             return None
         else:
             match = re.match("([+-])((\d+)D)?((\d+)h)?((\d+)m)?((\d+)s)?", time)
@@ -121,7 +121,7 @@ class KnotCollector(object):
             for zone, info in zone_states.items():
 
                 serial = info.get('serial', False)
-                if serial:
+                if serial and serial != "none" and serial != "-":
                     m = GaugeMetricFamily('knot_zone_serial', '', labels=['zone'])
                     m.add_metric([zone], int(serial))
 
