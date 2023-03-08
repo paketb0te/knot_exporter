@@ -64,13 +64,17 @@ class KnotCollector(object):
         ctl = libknot.control.KnotCtl()
         ctl.connect(self._sock)
         ctl.set_timeout(self._ttl)
+        metric_families = dict()
+
+        def metric_families_append(family, labels, labels_val, data):
+            m = metric_families.get(family, GaugeMetricFamily(family, '', labels=labels))
+            m.add_metric(labels_val, data)
+            metric_families[family] = m
 
         if self.collect_meminfo:
             # Get global metrics.
             for pid, usage in memory_usage().items():
-                m = GaugeMetricFamily('knot_memory_usage', '', labels=['section', 'type'])
-                m.add_metric(['server', str(pid)], usage)
-                yield m
+                metric_families_append('knot_memory_usage', ['section', 'type'], ['server', str(pid)], usage)
 
         if self.collect_stats:
             ctl.send_block(cmd="stats", flags="")
@@ -81,15 +85,10 @@ class KnotCollector(object):
                     name = ('knot_' + item).replace('-', '_')
                     try:
                         for kind, kind_data in item_data.items():
-                            m = GaugeMetricFamily(name, '',
-                                    labels=['section', 'type'])
-                            m.add_metric([section, kind], kind_data)
-                            yield m
+                            metric_families_append(name, ['section', 'type'], [section, kind], kind_data)
+
                     except AttributeError:
-                        m = GaugeMetricFamily(name, '',
-                                labels=['section'])
-                        m.add_metric([section], item_data)
-                        yield m
+                        metric_families_append(name, ['section'], [section], item_data)
 
         if self.collect_zone_stats:
             # Get zone metrics.
@@ -103,15 +102,9 @@ class KnotCollector(object):
                             name = ('knot_' + item).replace('-', '_')
                             try:
                                 for kind, kind_data in item_data.items():
-                                    m = GaugeMetricFamily(name, '',
-                                        labels=['zone', 'section', 'type'])
-                                    m.add_metric([zone, section, kind], kind_data)
-                                    yield m
+                                    metric_families_append(name, ['zone', 'section', 'type'], [zone, section, kind], kind_data)
                             except AttributeError:
-                                m = GaugeMetricFamily(name, '',
-                                        labels=['zone', 'section'])
-                                m.add_metric([zone, section], item_data)
-                                yield m
+                                metric_families_append(name, ['zone', 'section'], [zone, section], item_data)
 
         if self.collect_zone_status:
             # zone state metrics
@@ -119,13 +112,9 @@ class KnotCollector(object):
             zone_states = ctl.receive_block()
 
             for zone, info in zone_states.items():
-
                 serial = info.get('serial', False)
                 if serial and serial != "none" and serial != "-":
-                    m = GaugeMetricFamily('knot_zone_serial', '', labels=['zone'])
-                    m.add_metric([zone], int(serial))
-
-                    yield m
+                    metric_families_append('knot_zone_serial', ['zone'], [zone], int(serial))
 
                 metrics = ['expiration', 'refresh']
 
@@ -134,10 +123,7 @@ class KnotCollector(object):
                     if seconds == None:
                         continue
 
-                    m = GaugeMetricFamily('knot_zone_stats_' + metric, '', labels=['zone'])
-                    m.add_metric([zone], seconds)
-
-                    yield m
+                    metric_families_append('knot_zone_stats_' + metric, ['zone'], [zone], seconds)
 
         if self.collect_zone_timers:
             # zone configuration metrics
@@ -154,10 +140,10 @@ class KnotCollector(object):
                 zone_config = params[name]['SOA']['data'][0].split(" ")
 
                 for metric in metrics:
-                    m = GaugeMetricFamily(metric['name'], '', labels=['zone'])
-                    m.add_metric([name], int(zone_config[metric['index']]))
+                    metric_families_append(metric['name'], ['zone'], [name], int(zone_config[metric['index']]))
 
-                    yield m
+        for val in metric_families.values():
+            yield val
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
