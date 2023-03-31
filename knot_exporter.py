@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         "--knot-library-path",
-        default="libknot.so",
+        default=None,
         help="path to libknot."
     )
 
