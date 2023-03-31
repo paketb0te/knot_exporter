@@ -30,7 +30,7 @@ Once everything is in place, knot_exporter can be started like so:
 
 .. code-block:: bash
 
-   $ ./knot_exporter.py --knot-library-path /path/to/libknot.so
+   $ ./knot_exporter.py
 
 To get a complete list of the available options, run:
 
