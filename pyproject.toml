@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knot_exporter"
+version = "0.1.0"
+authors = [{ name = "Foo Bar", email = "foo@bar.baz" }]
+description = "Hello I am knot exporter"
+readme = "README.rst"
+requires-python = ">=3.7"
+keywords = ["one", "two"]
+license = { text = "BSD-3-Clause" }
+dependencies = ["libknot", "prometheus-client", "psutil"]
+
+[project.scripts]
+knot-exporter = "knot_exporter.main:main"

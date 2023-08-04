@@ -15,11 +15,11 @@ access to Knot's socket path.
 
 .. _`Python libknot wrapper`: https://pypi.org/project/libknot/
 
-The libknot wrapper, along with other required dependencies, can be installed from `requirements.txt` with pip (ideally in a virtual environment):
+To install knot_exporter along with all required dependencies (ideally in a virtual environment), run:
 
 .. code-block:: bash
 
-   $ pip install -r requirements.txt
+   $ pip install .
 
 The Knot instance also needs to be configured to collect per-zone query
 statistic. This can be done by enabling and configuring the `stats module`_.
@@ -30,13 +30,13 @@ Once everything is in place, knot_exporter can be started like so:
 
 .. code-block:: bash
 
-   $ ./knot_exporter.py
+   $ knot-exporter
 
 To get a complete list of the available options, run:
 
 .. code-block:: bash
 
-   $ ./knot_exporter.py --help
+   $ knot-exporter --help
 
 Copyright
 ---------

@@ -145,7 +145,8 @@ class KnotCollector(object):
         for val in metric_families.values():
             yield val
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser(
         formatter_class = argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -237,3 +238,7 @@ if __name__ == '__main__':
     )
 
     httpd.serve_forever()
+
+
+if __name__ == '__main__':
+    main()
